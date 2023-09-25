@@ -1,36 +1,22 @@
 import requests
 import json
-from config import api_key, secret_key
-
-def get_access_token():
-    url = "https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=" + api_key + "&client_secret=" + secret_key
-        
-    payload = json.dumps("")
-    headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    }
-    
-    response = requests.request("POST",url,headers=headers,data=payload)
-    #return response
-    return response.json().get("access_token")
-    
-def main():
-    url = "https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions?access_token=" + get_access_token()
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    payload = json.dumps({
-        "messages":[
-            {
-                "role": "user",
-                "content": "你是一个AI小助手",
-            }
-        ]
-    })
-    
-    response = requests.request("POST",url,headers=headers,data=payload)
-    print(response.text)
+from config import prompt
+from chat_session import ChatSession, AuthenticationError
     
 if __name__ == '__main__':
-    main()
+    
+    if len(prompt) == 0:
+        newSession = ChatSession()
+    else:
+        newSession = ChatSession(prompt=prompt)
+    
+    
+    try:
+        newResponse=newSession.start()
+        print(">>"+ json.loads(newResponse.text)["result"])
+        while True:
+            print(">>",end="")
+            newResponse = newSession.send(input())
+            print(">>"+json.loads(newResponse.text)["result"])
+    except AuthenticationError:
+        print("Authentication Error, please check apikey and secret key")
