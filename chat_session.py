@@ -4,6 +4,8 @@ import json
 from datetime import datetime
 import os
 
+class AuthenticationError(Exception):  #if apikey and secret key are invalid
+    pass
 
 class ChatSession():
     def __init__(self,prompt=None) -> None:
@@ -27,7 +29,10 @@ class ChatSession():
     
         response = requests.request("POST",url,headers=headers,data=payload)
         #return response
-        self.__access_token = response.json().get("access_token")
+        if response.status_code == 200:
+            self.__access_token = response.json().get("access_token")
+        elif response.status_code == 401:
+            raise AuthenticationError
         return self.__access_token
 
     def __insertSystemPrompt(self):
